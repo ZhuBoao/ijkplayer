@@ -136,10 +136,10 @@ if (NOT IJK_DESKTOP_UNI)
 endif()
 
 if (ANDROID)
+    target_link_libraries(${IJKPLAYER_LIB_NAME} -ljnigraphics)
     target_link_libraries(${IJKPLAYER_LIB_NAME} ijksoundtouch)
     target_link_libraries(${IJKPLAYER_LIB_NAME} ijkffmpeg)
     target_link_libraries(${IJKPLAYER_LIB_NAME} android-ndk-profiler)
     target_link_libraries(${IJKPLAYER_LIB_NAME} log)
     target_link_libraries(${IJKPLAYER_LIB_NAME} android)
 endif ()
-

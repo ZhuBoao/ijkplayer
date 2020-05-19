@@ -728,6 +728,14 @@ typedef struct FFPlayer {
     int cover_after_prepared;
     int vout_type;
     int aout_type;
+    AVFormatContext *m_ofmt_ctx;        // struct for output
+    AVOutputFormat *m_ofmt;
+    pthread_mutex_t record_mutex;
+    int is_record;
+    int record_error;
+    int is_first;
+    int64_t start_pts;
+    int64_t start_dts;
 } FFPlayer;
 
 #define fftime_to_milliseconds(ts) (av_rescale(ts, 1000, AV_TIME_BASE))
