@@ -31,6 +31,7 @@ import java.util.Map;
 
 import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 import tv.danmaku.ijk.media.player.misc.ITrackInfo;
+import android.graphics.Bitmap;
 
 public class MediaPlayerProxy implements IMediaPlayer {
     protected final IMediaPlayer mBackEndMediaPlayer;
@@ -357,4 +358,13 @@ public class MediaPlayerProxy implements IMediaPlayer {
     public boolean isLooping() {
         return mBackEndMediaPlayer.isLooping();
     }
+
+    @Override
+    public native int startRecord(String file);
+
+    @Override
+    public native int stopRecord();
+
+    @Override
+    public native boolean getCurrentFrame(Bitmap bitmap);
 }

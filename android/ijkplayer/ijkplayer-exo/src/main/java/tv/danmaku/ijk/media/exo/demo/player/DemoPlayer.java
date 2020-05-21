@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import android.graphics.Bitmap;
 
 /**
  * A wrapper around {link ExoPlayer} that provides a higher level interface. It can be prepared
@@ -596,5 +597,14 @@ public class DemoPlayer implements ExoPlayer.Listener, ChunkSampleSource.EventLi
           videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, surface);
     }
   }
+
+  @Override
+  public native int startRecord(String file);
+
+  @Override
+  public native int stopRecord();
+
+  @Override
+  public native boolean getCurrentFrame(Bitmap bitmap);
 
 }

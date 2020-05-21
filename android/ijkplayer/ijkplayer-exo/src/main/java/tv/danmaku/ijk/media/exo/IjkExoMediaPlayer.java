@@ -39,6 +39,7 @@ import tv.danmaku.ijk.media.player.AbstractMediaPlayer;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.MediaInfo;
 import tv.danmaku.ijk.media.player.misc.IjkTrackInfo;
+import android.graphics.Bitmap;
 
 public class IjkExoMediaPlayer extends AbstractMediaPlayer {
     private Context mAppContext;
@@ -402,4 +403,13 @@ public class IjkExoMediaPlayer extends AbstractMediaPlayer {
     }
 
     private DemoPlayerListener mDemoListener;
+
+    @Override
+    public native int startRecord(String file);
+
+    @Override
+    public native int stopRecord();
+
+    @Override
+    public native boolean getCurrentFrame(Bitmap bitmap);
 }

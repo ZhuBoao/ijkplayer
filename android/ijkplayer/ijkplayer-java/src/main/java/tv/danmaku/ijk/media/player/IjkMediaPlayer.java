@@ -67,6 +67,7 @@ import tv.danmaku.ijk.media.player.misc.ITrackInfo;
 import tv.danmaku.ijk.media.player.misc.IjkTrackInfo;
 import tv.danmaku.ijk.media.player.misc.MediaCodecSurface;
 import tv.danmaku.ijk.media.player.pragma.DebugLog;
+import android.graphics.Bitmap;
 
 /**
  * @author bbcallen
@@ -1438,4 +1439,13 @@ public final class IjkMediaPlayer extends AbstractMediaPlayer {
     }
 
     private static native void native_setLogLevel(int level);
+
+    @Override
+    public native int startRecord(String file);
+
+    @Override
+    public native int stopRecord();
+
+    @Override
+    public native boolean getCurrentFrame(Bitmap bitmap);
 }

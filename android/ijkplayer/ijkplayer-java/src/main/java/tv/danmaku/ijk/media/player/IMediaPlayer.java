@@ -31,6 +31,8 @@ import java.util.Map;
 
 import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 import tv.danmaku.ijk.media.player.misc.ITrackInfo;
+import android.graphics.Bitmap;
+
 
 public interface IMediaPlayer {
     /**
@@ -229,4 +231,11 @@ public interface IMediaPlayer {
      * AndroidMediaPlayer: M:
      */
     void setDataSource(IMediaDataSource mediaDataSource);
+
+    int startRecord(String file);
+
+    int stopRecord();
+
+    boolean getCurrentFrame(Bitmap bitmap);
+
 }

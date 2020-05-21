@@ -39,6 +39,7 @@ import tv.danmaku.ijk.media.player.misc.AndroidTrackInfo;
 import tv.danmaku.ijk.media.player.misc.IMediaDataSource;
 import tv.danmaku.ijk.media.player.misc.ITrackInfo;
 import tv.danmaku.ijk.media.player.pragma.DebugLog;
+import android.graphics.Bitmap;
 
 public class AndroidMediaPlayer extends AbstractMediaPlayer {
     private final MediaPlayer mInternalMediaPlayer;
@@ -439,4 +440,13 @@ public class AndroidMediaPlayer extends AbstractMediaPlayer {
             notifyOnTimedText(ijkText);
         }
     }
+
+    @Override
+    public native int startRecord(String file);
+
+    @Override
+    public native int stopRecord();
+
+    @Override
+    public native boolean getCurrentFrame(Bitmap bitmap);
 }
