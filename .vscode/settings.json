@@ -5,5 +5,10 @@
         "**/ijkplayer-armv7a/**": true,
         "**/ijkplayer-x86/**": true,
         "**/ijkplayer-x86_64/**": true,
+    },
+    "files.associations": {
+        "array": "c",
+        "string": "c",
+        "string_view": "c"
     }
 }

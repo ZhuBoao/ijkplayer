@@ -197,6 +197,9 @@ FF_DEP_LIBSOXR_LIB=$FF_PREFIX/lib
 FF_DEP_LIBSRT_INC=$FF_PREFIX/include
 FF_DEP_LIBSRT_LIB=$FF_PREFIX/lib
 
+FF_DEP_LIBX264_INC=$FF_PREFIX/include
+FF_DEP_LIBX264_LIB=$FF_PREFIX/lib
+
 case "$UNAME_S" in
     CYGWIN_NT-*)
         FF_SYSROOT="$(cygpath -am $FF_SYSROOT)"
@@ -277,6 +280,12 @@ if [ -f "${FF_DEP_LIBSRT_LIB}/libsrt.a" ]; then
 
     FF_CFLAGS="$FF_CFLAGS -I${FF_DEP_LIBSRT_INC}"
     FF_DEP_LIBS="$FF_DEP_LIBS -L${FF_DEP_LIBSRT_LIB} -lsrt -lc -lm -ldl -lcrypto -lssl -lstdc++"
+fi
+
+if [ -f "${FF_DEP_LIBSRT_LIB}/libx264.a" ]; then
+    echo "libx264 detected"
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-libx264"
+    FF_CFG_FLAGS="$FF_CFG_FLAGS --enable-gpl"
 fi
 
 export PKG_CONFIG_PATH="${FF_PREFIX}/lib/pkgconfig"

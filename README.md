@@ -82,10 +82,11 @@ dependencies {
 
 ### Before Build
 ```
-# install homebrew, git, yasm
+# install homebrew, git, yasm, nasm
 ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install git
 brew install yasm
+brew install nasm
 
 # add these lines to your ~/.bash_profile or ~/.profile
 # export ANDROID_SDK=<your sdk path>
