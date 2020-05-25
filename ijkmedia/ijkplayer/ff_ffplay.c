@@ -640,7 +640,6 @@ static int decoder_decode_frame(FFPlayer *ffp, Decoder *d, AVFrame *frame, AVSub
                     return -1;
             }
         } while (d->queue->serial != d->pkt_serial);
-
         if (pkt.data == flush_pkt.data) {
             avcodec_flush_buffers(d->avctx);
             d->finished = 0;
@@ -3395,6 +3394,18 @@ static int read_thread(void *arg)
     }
 
     for (;;) {
+        if (!ffp->is_first && pkt->pts == pkt->dts) {
+            ffp->start_pts = pkt->pts;
+            ffp->start_dts = pkt->dts;
+        }
+        if (ffp->is_record) { 
+            if (0 != ffp_record_file(ffp, pkt)) {
+                ffp->record_error = 1;
+                ffp_stop_record(ffp);
+                printf("avcodec_send_packet stop\n");
+            }
+        }
+
         if (is->abort_request)
             break;
 #ifdef FFP_MERGE
@@ -5208,60 +5219,64 @@ int ffp_start_record(FFPlayer *ffp, const char *file_name)
     assert(ffp);
 
     VideoState *is = ffp->is;
-
+    
     ffp->m_ofmt_ctx = NULL;
     ffp->m_ofmt = NULL;
     ffp->is_record = 0;
     ffp->record_error = 0;
-
+    
     if (!file_name || !strlen(file_name)) { // no path
         av_log(ffp, AV_LOG_ERROR, "filename is invalid");
         goto end;
     }
-
+    
     if (!is || !is->ic|| is->paused || is->abort_request) { // no context or it is stopped
         av_log(ffp, AV_LOG_ERROR, "is,is->ic,is->paused is invalid");
         goto end;
     }
-
+    
     if (ffp->is_record) { // is recording
         av_log(ffp, AV_LOG_ERROR, "recording has started");
         goto end;
     }
-
+    
     // Init a AVFormatContext struct for output
-    avformat_alloc_output_context2(&ffp->m_ofmt_ctx, NULL, "mp4", file_name);
+    avformat_alloc_output_context2(&ffp->m_ofmt_ctx, NULL, NULL, file_name);
     if (!ffp->m_ofmt_ctx) {
         av_log(ffp, AV_LOG_ERROR, "Could not create output context filename is %s\n", file_name);
         goto end;
     }
     ffp->m_ofmt = ffp->m_ofmt_ctx->oformat;
-
+    
     for (int i = 0; i < is->ic->nb_streams; i++) {
         // create output stream according to input stream
         AVStream *in_stream = is->ic->streams[i];
-        AVStream *out_stream = avformat_new_stream(ffp->m_ofmt_ctx, in_stream->codec->codec);
+        AVStream *out_stream = avformat_new_stream(ffp->m_ofmt_ctx, avcodec_find_encoder(in_stream->codecpar->codec_id));
         if (!out_stream) {
             av_log(ffp, AV_LOG_ERROR, "Failed allocating output stream\n");
             goto end;
         }
-
+        
         // Copy all the params to output AVCodecContext
-        // todo: solve this av_log
-        // av_log(ffp, AV_LOG_DEBUG, "in_stream->codec；%@\n", in_stream->codec);
-        if (avcodec_copy_context(out_stream->codec, in_stream->codec) < 0) {
+        AVCodecContext *codec_ctx = avcodec_alloc_context3(in_stream->codec->codec);
+        if (avcodec_parameters_to_context(codec_ctx, in_stream->codecpar) < 0){
+            printf("Failed to copy in_stream codecpar to codec context\n");
+            goto end;
+        }
+        // av_log(ffp, AV_LOG_DEBUG, "in_stream->codecpar->codec_id；%p\n", in_stream->codecpar->codec_id);
+        if (avcodec_parameters_from_context(out_stream->codecpar, codec_ctx) < 0) {
             av_log(ffp, AV_LOG_ERROR, "Failed to copy context from input to output stream codec context\n");
             goto end;
         }
-
+        
         out_stream->codec->codec_tag = 0;
         if (ffp->m_ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER) {
             out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
         }
     }
-
+    
     av_dump_format(ffp->m_ofmt_ctx, 0, file_name, 1);
-
+    
     // open output file
     if (!(ffp->m_ofmt->flags & AVFMT_NOFILE)) {
         if (avio_open(&ffp->m_ofmt_ctx->pb, file_name, AVIO_FLAG_WRITE) < 0) {
@@ -5269,17 +5284,17 @@ int ffp_start_record(FFPlayer *ffp, const char *file_name)
             goto end;
         }
     }
-
+    
     // write the header
     if (avformat_write_header(ffp->m_ofmt_ctx, NULL) < 0) {
         av_log(ffp, AV_LOG_ERROR, "Error occurred when opening output file\n");
         goto end;
     }
-
+    
     ffp->is_record = 1;
     ffp->record_error = 0;
     pthread_mutex_init(&ffp->record_mutex, NULL);
-
+    
     return 0;
 end:
     ffp->record_error = 1;
@@ -5293,48 +5308,52 @@ int ffp_record_file(FFPlayer *ffp, AVPacket *packet)
     int ret = 0;
     AVStream *in_stream;
     AVStream *out_stream;
-
+    
     if (ffp->is_record) {
         if (packet == NULL) {
             ffp->record_error = 1;
             av_log(ffp, AV_LOG_ERROR, "packet == NULL");
+            printf("ffp_record_file return null 1");
             return -1;
         }
-
+        
         AVPacket *pkt = (AVPacket *)av_malloc(sizeof(AVPacket)); // Use a different AVPacket aside from playing to avoid lagging
         av_new_packet(pkt, 0);
         if (0 == av_packet_ref(pkt, packet)) {
             pthread_mutex_lock(&ffp->record_mutex);
-
             if (!ffp->is_first) { // first frame started from 0
                 ffp->is_first = 1;
                 pkt->pts = 0;
                 pkt->dts = 0;
             } else { // minus start_pts to get correct time
-                pkt->pts = abs(pkt->pts - ffp->start_pts);
-                pkt->dts = abs(pkt->dts - ffp->start_dts);
+                pkt->pts = llabs(pkt->pts - ffp->start_pts);
+                pkt->dts = llabs(pkt->dts - ffp->start_dts);
+                printf("AVMEDIA_TYPE_VIDEO pkt->pts == %lld pkt->dts == %lld\n",pkt->pts,pkt->dts);
             }
 
             in_stream  = is->ic->streams[pkt->stream_index];
             out_stream = ffp->m_ofmt_ctx->streams[pkt->stream_index];
-
+            
             // convert pts/dts
             pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, (AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, (AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
             pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
             pkt->pos = -1;
-
+            
             // write an AVPacket to output
-            if ((ret = av_interleaved_write_frame(ffp->m_ofmt_ctx, pkt)) < 0) {
+            if ((ret = av_write_frame(ffp->m_ofmt_ctx, pkt)) < 0) {
+                printf("ret: %d", ret);
                 av_log(ffp, AV_LOG_ERROR, "Error muxing packet\n");
             }
-
+            
             av_packet_unref(pkt);
             pthread_mutex_unlock(&ffp->record_mutex);
         } else {
             av_log(ffp, AV_LOG_ERROR, "av_packet_ref == NULL");
+            printf("ffp_record_file return null 2");
         }
     }
+    printf("ffp_record_file return null 3 == %d\n",ret);
     return ret;
 }
 
