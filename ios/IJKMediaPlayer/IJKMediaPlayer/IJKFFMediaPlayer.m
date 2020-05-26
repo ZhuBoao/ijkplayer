@@ -498,4 +498,16 @@ int ff_media_player_msg_loop(void* arg)
         }
     }
 }
+
+- (void)stopRecord {
+    ijkmp_stop_record(_nativeMediaPlayer);
+    NSLog(@"stop record");
+}
+ 
+- (void)startRecordWithFileName:(NSString *)fileName {
+    const char *path = [fileName cStringUsingEncoding:NSUTF8StringEncoding];
+    ijkmp_start_record(_nativeMediaPlayer, path);
+    NSLog(@"start record fileName %@",fileName);
+}
+
 @end

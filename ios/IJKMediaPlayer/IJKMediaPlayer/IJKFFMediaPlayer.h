@@ -82,6 +82,8 @@ typedef void(^OnSnapshotBlock) (UIImage* __nullable image , NSError* __nullable 
 - (int)  seekTo:(long) msec;
 
 - (void) setLoop:(int) loop;
+- (void)stopRecord;
+- (void)startRecordWithFileName:(NSString *)fileName;
 - (int)  getLoop;
 
 - (void) setSpeed:(float) speed;
