@@ -263,7 +263,5 @@ export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-protocol=rtp"
 export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-demuxer=rtsp"
 export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-decoder=mjpeg"
 export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-demuxer=mjpeg"
-export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-libx264"
-export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-gpl"
 
 # --enable-static --extra-cflags=-I./x264/include --extra-ldflags=-L./x264/lib --extra-libs=-ldl
