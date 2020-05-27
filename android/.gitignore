@@ -85,3 +85,5 @@ local.properties
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+/contrib/libx264-*/

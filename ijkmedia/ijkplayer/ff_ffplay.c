@@ -3394,11 +3394,11 @@ static int read_thread(void *arg)
     }
 
     for (;;) {
-        if (!ffp->is_first && pkt->pts == pkt->dts) {
+        if (!ffp->is_first && pkt->pts == pkt->dts && pkt->stream_index == st_index[AVMEDIA_TYPE_VIDEO]) {
             ffp->start_pts = pkt->pts;
             ffp->start_dts = pkt->dts;
         }
-        if (ffp->is_record) { 
+        if (ffp->is_record && pkt->stream_index == st_index[AVMEDIA_TYPE_VIDEO]) { 
             if (0 != ffp_record_file(ffp, pkt)) {
                 ffp->record_error = 1;
                 ffp_stop_record(ffp);
@@ -5328,18 +5328,21 @@ int ffp_record_file(FFPlayer *ffp, AVPacket *packet)
             } else { // minus start_pts to get correct time
                 pkt->pts = llabs(pkt->pts - ffp->start_pts);
                 pkt->dts = llabs(pkt->dts - ffp->start_dts);
-                printf("AVMEDIA_TYPE_VIDEO pkt->pts == %lld pkt->dts == %lld\n",pkt->pts,pkt->dts);
             }
 
             in_stream  = is->ic->streams[pkt->stream_index];
             out_stream = ffp->m_ofmt_ctx->streams[pkt->stream_index];
             
             // convert pts/dts
-            pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, (AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, (AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-            pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
-            pkt->pos = -1;
+            // pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, (AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            // pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, (AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+            // pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
+            // pkt->pos = -1;
             
+            // printf("After convert pts/dts");
+            // printf("pkt->pts == %lld pkt->dts == %lld\n", pkt->pts, pkt->dts);
+            // printf("pkt->duration == %lld", pkt->duration);
+
             // write an AVPacket to output
             if ((ret = av_write_frame(ffp->m_ofmt_ctx, pkt)) < 0) {
                 printf("ret: %d", ret);
